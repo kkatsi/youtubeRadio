@@ -1,135 +1,112 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import "./SCSS/App.scss";
-import axios from "axios";
+// import axios from "axios";
 import ReactPlayer from "react-player";
 import { BsFillPlayFill, BsFillPauseFill } from "react-icons/bs";
-import { GiPocketRadio, GiSettingsKnobs } from "react-icons/gi";
+import { GiSettingsKnobs } from "react-icons/gi";
+import { GrClose } from "react-icons/gr";
 import { AiOutlineLoading } from "react-icons/ai";
 import { MdVolumeUp, MdVolumeOff } from "react-icons/md";
 import Grid from "@material-ui/core/Grid";
 import Slider from "@material-ui/core/Slider";
+import randomColor from "randomcolor";
+import logo from "./assets/Untitled-1.png";
+import Autocomplete from "@material-ui/lab/Autocomplete";
+import TextField from "@material-ui/core/TextField";
+import countries from "./assets/countries.json";
+import useGetTrends from "./Hooks/useGetTrends";
 
 function App() {
-  let photoUrl, photoWidth, photoHeight;
   const [url, setUrl] = useState("");
   const [play, setPlay] = useState(false);
-  const [data, setData] = useState();
   const [index, setIndex] = useState(0);
+  const [rColor, setRColor] = useState(randomColor());
   const [playText, setPlayText] = useState(
     <div style={{ marginLeft: "1rem" }}>
       <BsFillPlayFill />
     </div>
   );
 
+  const defaultProps = {
+    options: countries,
+    getOptionLabel: (option) => option.Name,
+  };
+
   const [countryName, setCountryName] = useState("GR");
   const [songName, setSongName] = useState("");
-  // const [songPhoto, setSongPhoto] = useState("");
+  const [selectedValue, setSelectedValue] = useState("GR");
 
   const [volumeValue, setVolumeValue] = useState(100);
   const [prevVolumeValue, setPrevVolumeValue] = useState();
+
+  const [justGoToNext, setJustGoToNext] = useState(false);
+
+  const { data, loading } = useGetTrends(countryName);
 
   const handleChange = (event, newValue) => {
     setVolumeValue(newValue);
   };
 
-  // useEffect(() => {
-  //   document.querySelector(".content").style.height =
-  //     document.querySelector(".App").clientHeight -
-  //     20 -
-  //     document.querySelector("header").clientHeight +
-  //     "px";
-  // }, []);
-
-  function requestData() {
-    axios({
-      method: "get",
-      url: `https://youtube.googleapis.com/youtube/v3/videos`,
-      params: {
-        part: "snippet",
-        chart: "mostPopular",
-        regionCode: "GR",
-        videoCategoryId: "10",
-        maxResults: "50",
-        key: process.env.REACT_APP_YOUTUBE_API_KEY,
-      },
-    }).then((res) => {
-      console.log(res.data);
-      const unshuffled = res.data.items;
-      const shuffled = unshuffled
-        .map((value) => ({ value, sort: Math.random() }))
-        .sort((a, b) => a.sort - b.sort)
-        .map(({ value }) => value);
-      res.data.items = shuffled;
-      setUrl(`https://www.youtube.com/watch?v=${res.data.items[0].id}`);
-      console.log(res.data.items[0]);
-      setSongName(res.data.items[0].snippet.localized.title);
+  const playNext = useCallback(() => {
+    console.log(data);
+    let photoUrl, photoWidth, photoHeight;
+    if (data && index < data.items?.length - 1) {
+      setUrl(`https://www.youtube.com/watch?v=${data.items[index].id}`);
+      setSongName(data.items[index].snippet.localized.title);
       if (window.innerWidth > 786) {
-        photoUrl = res.data.items[0].snippet.thumbnails.high.url;
-        photoWidth = res.data.items[0].snippet.thumbnails.high.width;
-        photoHeight = res.data.items[0].snippet.thumbnails.high.height;
+        photoUrl = data.items[index].snippet.thumbnails.high.url;
+        photoWidth = data.items[index].snippet.thumbnails.high.width;
+        photoHeight = data.items[index].snippet.thumbnails.high.height;
       } else {
-        photoUrl = res.data.items[0].snippet.thumbnails.medium.url;
-        photoWidth = res.data.items[0].snippet.thumbnails.medium.width;
-        photoHeight = res.data.items[0].snippet.thumbnails.medium.height;
+        photoUrl = data.items[index].snippet.thumbnails.medium.url;
+        photoWidth = data.items[index].snippet.thumbnails.medium.width;
+        photoHeight = data.items[index].snippet.thumbnails.medium.height;
       }
       document.querySelector(
         ".songPhoto"
-      ).style.backgroundImage = `url(${photoUrl})`;
+      ).style.backgroundImage = `url(${photoUrl}), linear-gradient(350deg, #181818, ${rColor}40)`;
+      document.querySelector(
+        ".songPhoto"
+      ).style.backgroundColor = `${rColor}25`;
       document.querySelector(".songPhoto").style.width = photoWidth + "px";
       document.querySelector(".songPhoto").style.height = photoHeight + "px";
-      // document.querySelector(".App").style.backgroundColor = "transparent";
+      document.querySelector(
+        ".App"
+      ).style.background = `linear-gradient(350deg, #181818 38%,${rColor} 100%)`;
+      setRColor(randomColor());
+      // console.log(data.items[index].id);
+      if (index === 0) setPlay(true);
+      setIndex((prevIndex) => prevIndex + 1);
+    }
+  }, [data, justGoToNext]);
 
-      setPlay(true);
-      setIndex(0);
-      setData(res.data);
-    });
-  }
+  const firstUpdate = useRef(false);
 
-  // useEffect(() => {
-  //   if (data) {
-  //     if (index === data.items.length) requestData(data.nextPageToken);
-  //   }
-  // }, [index, data, requestData]);
+  useEffect(() => {
+    if (!loading && firstUpdate.current) {
+      playNext();
+      console.log("it run");
+    }
+  }, [data, loading, playNext, justGoToNext]);
 
   function handlePlay() {
     if (!play) {
-      if (!data) {
+      if (index === 0) {
         document.querySelector(".playButton").classList.add("move");
         setPlayText(
           <div className="loading">
             <AiOutlineLoading />
           </div>
         );
-        requestData();
+        firstUpdate.current = true;
+        console.log(index);
+        playNext();
         return;
       }
       setPlay(true);
       return;
     }
     setPlay(false);
-  }
-
-  function playNext() {
-    setIndex((prevIndex) => prevIndex + 1);
-    if (index < data.items.length - 1) {
-      setUrl(`https://www.youtube.com/watch?v=${data.items[index + 1].id}`);
-      setSongName(data.items[index + 1].snippet.localized.title);
-      if (window.innerWidth > 786) {
-        photoUrl = data.items[index + 1].snippet.thumbnails.high.url;
-        photoWidth = data.items[index + 1].snippet.thumbnails.high.width;
-        photoHeight = data.items[index + 1].snippet.thumbnails.high.height;
-      } else {
-        photoUrl = data.items[index + 1].snippet.thumbnails.medium.url;
-        photoWidth = data.items[index + 1].snippet.thumbnails.medium.width;
-        photoHeight = data.items[index + 1].snippet.thumbnails.medium.height;
-      }
-      document.querySelector(
-        ".songPhoto"
-      ).style.backgroundImage = `url(${photoUrl})`;
-      document.querySelector(".songPhoto").style.width = photoWidth + "px";
-      document.querySelector(".songPhoto").style.height = photoHeight + "px";
-      // console.log(data.items[index].id);
-    }
   }
 
   function mute(e) {
@@ -141,6 +118,20 @@ function App() {
     setVolumeValue(0);
   }
 
+  function swipeScreen() {
+    document.querySelector(".location-settings").classList.add("openSettings");
+    document
+      .querySelector(".location-settings")
+      .classList.remove("closeSettings");
+  }
+
+  function closeSettings() {
+    document
+      .querySelector(".location-settings")
+      .classList.remove("openSettings");
+    document.querySelector(".location-settings").classList.add("closeSettings");
+  }
+
   return (
     <div className="App">
       {/* <div
@@ -149,7 +140,7 @@ function App() {
       ></div>
       <div className="overlay"></div> */}
       <header>
-        YT Radio <GiPocketRadio />
+        <img src={logo} style={{ margin: "auto" }} alt="logo" />
       </header>
 
       <div className="content">
@@ -163,7 +154,7 @@ function App() {
               value={volumeValue}
               onChange={handleChange}
               aria-labelledby="continuous-slider"
-              style={{ marginLeft: ".5rem" }}
+              style={{ marginLeft: "1rem" }}
             />
           </Grid>
         </div>
@@ -177,7 +168,7 @@ function App() {
             ""
           )}
         </span>
-        <div className="countrySettings">
+        <div className="countrySettings" onClick={swipeScreen}>
           <span>{countryName}</span>
           <span>
             <GiSettingsKnobs />
@@ -187,6 +178,41 @@ function App() {
         <button className="playButton" onClick={handlePlay}>
           {playText}
         </button>
+      </div>
+
+      <div className="location-settings">
+        <div className="top">
+          <GrClose
+            color="red"
+            style={{ fontSize: "1.3rem", cursor: "pointer" }}
+            onClick={closeSettings}
+          />
+          <span className="title">Country Settings</span>
+        </div>
+        <div className="select">
+          <span>Playing the trends in:</span>
+          <Autocomplete
+            {...defaultProps}
+            id="auto-select"
+            autoComplete
+            onChange={(event, value) => setSelectedValue(value.Code)}
+            defaultValue={{ Code: "GR", Name: "Greece" }}
+            renderInput={(params) => <TextField {...params} margin="normal" />}
+          />
+          <div style={{ textAlign: "center" }}>
+            <button
+              className="save-button"
+              onClick={() => {
+                setCountryName(selectedValue);
+                setIndex(0);
+                setJustGoToNext((prev) => !prev);
+                closeSettings();
+              }}
+            >
+              Save
+            </button>
+          </div>
+        </div>
       </div>
 
       <ReactPlayer
@@ -207,13 +233,14 @@ function App() {
             </div>
           );
         }}
-        onReady={() =>
+        onReady={() => {
+          setPlay(true);
           setPlayText(
             <div className="loading">
               <AiOutlineLoading />
             </div>
-          )
-        }
+          );
+        }}
         onSeek={() =>
           setPlayText(
             <div className="loading">
@@ -229,8 +256,8 @@ function App() {
             </div>
           );
         }}
-        onEnded={playNext}
-        controls={true}
+        onEnded={() => setJustGoToNext((prev) => !prev)}
+        // controls={true}
       />
     </div>
   );
