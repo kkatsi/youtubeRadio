@@ -26,6 +26,7 @@ export default function useGetTrends(country) {
         .map(({ value }) => value);
       res.data.items = shuffled;
       setData(res.data);
+      console.log(res.data);
       setLoading(false);
     });
   }, [country]);

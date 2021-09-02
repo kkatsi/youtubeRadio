@@ -15,6 +15,7 @@ import Autocomplete from "@material-ui/lab/Autocomplete";
 import TextField from "@material-ui/core/TextField";
 import countries from "./assets/countries.json";
 import useGetTrends from "./Hooks/useGetTrends";
+import SimplexNoise from "simplex-noise";
 
 function App() {
   const [url, setUrl] = useState("");
@@ -35,6 +36,7 @@ function App() {
   const [countryName, setCountryName] = useState("GR");
   const [songName, setSongName] = useState("");
   const [selectedValue, setSelectedValue] = useState("GR");
+  const [disabled, setDisabled] = useState(true);
 
   const [volumeValue, setVolumeValue] = useState(100);
   const [prevVolumeValue, setPrevVolumeValue] = useState();
@@ -82,12 +84,125 @@ function App() {
 
   const firstUpdate = useRef(false);
 
+  function initWaves() {
+    const canvas = {
+      playing: true,
+      toggle() {
+        this.playing = !this.playing;
+      },
+      init() {
+        this.ele = document.querySelector("#waves");
+        this.resize();
+        window.addEventListener("resize", () => this.resize(), false);
+        this.ctx = this.ele.getContext("2d");
+        return this.ctx;
+      },
+      onResize(callback) {
+        this.resizeCallback = callback;
+      },
+      resize() {
+        this.width = this.ele.width = window.innerWidth * 2;
+        this.height = this.ele.height = window.innerHeight * 2;
+        this.ele.style.width = this.ele.width * 0.5 + "px";
+        this.ele.style.height = this.ele.height * 0.5 + "px";
+        this.ctx = this.ele.getContext("2d");
+        this.ctx.scale(2, 2);
+        this.resizeCallback && this.resizeCallback();
+      },
+      run(callback) {
+        requestAnimationFrame(() => {
+          this.run(callback);
+        });
+        callback(this.ctx);
+      },
+    };
+
+    const ctx = canvas.init();
+
+    let objects = [];
+
+    class Wave {
+      vectors = [];
+      constructor(color) {
+        this.color = color;
+        this.noise = new SimplexNoise(Math.random());
+      }
+
+      drawLine() {
+        ctx.strokeStyle = this.color;
+        for (let i = 0; i < this.vectors.length; i++) {
+          ctx.beginPath();
+          const { x, y } = this.vectors[i];
+          ctx.lineCap = "round";
+          ctx.lineWidth = 2;
+          ctx.moveTo(0, 0);
+          ctx.lineTo(x, y);
+          ctx.closePath();
+          ctx.stroke();
+        }
+      }
+
+      draw(t) {
+        ctx.save();
+        ctx.translate(window.innerWidth * 0.5, window.innerHeight * 0.5);
+
+        const base = 180;
+        const scale = 20;
+        this.vectors = [];
+
+        for (let degree = 0; degree < 180; degree++) {
+          const radius = (degree / 90) * Math.PI;
+          const length =
+            base +
+            this.noise.noise3D(Math.cos(radius), Math.sin(radius), t) * scale;
+
+          this.vectors.push({
+            x: length * Math.cos(radius),
+            y: length * Math.sin(radius),
+          });
+        }
+        this.drawLine();
+
+        ctx.restore();
+      }
+    }
+
+    const init = () => {
+      objects = [];
+      objects.push(new Wave("#c00"));
+    };
+
+    init();
+
+    let tick = 0;
+    canvas.run((ctx) => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      tick += 0.05;
+      objects.forEach((obj) => {
+        obj.draw(tick);
+      });
+    });
+
+    canvas.onResize(() => {
+      init();
+    });
+  }
+
+  useEffect(() => {
+    initWaves();
+    document.querySelector("canvas").style.display = "none";
+  }, []);
+
   useEffect(() => {
     if (!loading && firstUpdate.current) {
       playNext();
       console.log("it run");
     }
   }, [data, loading, playNext, justGoToNext]);
+
+  useEffect(() => {
+    console.log(disabled);
+  }, [disabled]);
 
   function handlePlay() {
     if (!play) {
@@ -146,7 +261,7 @@ function App() {
       <div className="content">
         <div className="songPhoto"></div>
         <div className="volumeSettings">
-          <span onClick={mute}>
+          <span onClick={mute} className="volumeIcon">
             {volumeValue !== 0 ? <MdVolumeUp /> : <MdVolumeOff />}
           </span>
           <Grid item xs>
@@ -178,6 +293,7 @@ function App() {
         <button className="playButton" onClick={handlePlay}>
           {playText}
         </button>
+        <canvas id="waves"></canvas>
       </div>
 
       <div className="location-settings">
@@ -195,18 +311,24 @@ function App() {
             {...defaultProps}
             id="auto-select"
             autoComplete
-            onChange={(event, value) => setSelectedValue(value.Code)}
+            onChange={(event, value) => {
+              setSelectedValue(value.Code);
+              setDisabled(false);
+              console.log("this");
+            }}
             defaultValue={{ Code: "GR", Name: "Greece" }}
             renderInput={(params) => <TextField {...params} margin="normal" />}
           />
           <div style={{ textAlign: "center" }}>
             <button
               className="save-button"
+              disabled={disabled || false}
               onClick={() => {
                 setCountryName(selectedValue);
                 setIndex(0);
                 setJustGoToNext((prev) => !prev);
                 closeSettings();
+                setDisabled(true);
               }}
             >
               Save
@@ -224,6 +346,7 @@ function App() {
         onPlay={() => {
           setPlay(true);
           setPlayText(<BsFillPauseFill />);
+          document.querySelector("canvas").style.display = "block";
         }}
         onPause={() => {
           setPlay(false);
@@ -232,6 +355,7 @@ function App() {
               <BsFillPlayFill />
             </div>
           );
+          document.querySelector("canvas").style.display = "none";
         }}
         onReady={() => {
           setPlay(true);
@@ -241,13 +365,14 @@ function App() {
             </div>
           );
         }}
-        onSeek={() =>
+        onSeek={() => {
           setPlayText(
             <div className="loading">
               <AiOutlineLoading />
             </div>
-          )
-        }
+          );
+          document.querySelector("canvas").style.display = "none";
+        }}
         onBuffer={() => {
           setPlay(false);
           setPlayText(
@@ -255,6 +380,7 @@ function App() {
               <AiOutlineLoading />
             </div>
           );
+          document.querySelector("canvas").style.display = "none";
         }}
         onEnded={() => setJustGoToNext((prev) => !prev)}
         // controls={true}

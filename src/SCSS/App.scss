@@ -63,6 +63,7 @@ $greyshadow: rgba(170, 170, 170, 0.2);
   .content {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     justify-content: space-between;
     padding-bottom: 30px;
     width: 95%;
@@ -141,6 +142,7 @@ $greyshadow: rgba(170, 170, 170, 0.2);
     border: 0;
     background-color: $red;
     cursor: pointer;
+    z-index: 2;
     &.move {
       animation: moveDown 0.5s linear forwards;
     }
@@ -159,6 +161,48 @@ $greyshadow: rgba(170, 170, 170, 0.2);
     }
   }
 
+  #waves {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 20px;
+    bottom: 0;
+    transform: translateY(28%) scale(0.4);
+    // transform: translateY(84%) scale(0.4);
+  }
+
+  @media (max-width: 550px) {
+    #waves {
+      transform: translateY(23%) scale(0.3);
+    }
+    .content .songName {
+      width: 100%;
+      order: 2;
+      padding-top: 20px;
+    }
+    .playButton.move {
+      animation: moveDownMobile 0.5s linear forwards;
+    }
+    .MuiGrid-item {
+      display: none;
+    }
+    .volumeSettings {
+      margin-right: 0 !important;
+      padding-left: 20px;
+      .volumeIcon {
+        font-size: 2rem;
+      }
+      width: 50%;
+    }
+    .countrySettings {
+      display: flex;
+      justify-content: flex-end;
+      padding-right: 20px;
+      width: 50%;
+      margin-left: 0 !important;
+    }
+  }
+
   .location-settings {
     color: white !important;
     padding: 20px;
@@ -167,10 +211,10 @@ $greyshadow: rgba(170, 170, 170, 0.2);
     position: absolute;
     left: 100%;
     top: 0;
-    width: 100%;
     height: 100%;
     background-color: $black;
-    max-width: 350px;
+    width: 310px;
+    z-index: 3;
     path {
       color: white;
       fill: white;
@@ -217,8 +261,12 @@ $greyshadow: rgba(170, 170, 170, 0.2);
         color: white;
         padding: 0.5rem 3rem;
         margin-top: 1rem;
-        border-radius: 1rem;
-        &:hover {
+        border-radius: 10000px;
+        &:disabled {
+          background-color: $grey;
+          border-color: transparent;
+        }
+        &:hover:not(:disabled) {
           background-color: $red;
         }
       }
@@ -241,6 +289,11 @@ $greyshadow: rgba(170, 170, 170, 0.2);
 @keyframes moveDown {
   to {
     transform: translateY(84%) scale(0.4);
+  }
+}
+@keyframes moveDownMobile {
+  to {
+    transform: translateY(70%) scale(0.4);
   }
 }
 
