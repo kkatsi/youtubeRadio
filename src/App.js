@@ -372,14 +372,14 @@ function App() {
           );
           document.querySelector("canvas").style.display = "none";
         }}
-        onReady={() => {
-          setPlay(true);
-          setPlayText(
-            <div className="loading">
-              <AiOutlineLoading />
-            </div>
-          );
-        }}
+        // onReady={() => {
+        //   setPlay(true);
+        //   setPlayText(
+        //     <div className="loading">
+        //       <AiOutlineLoading />
+        //     </div>
+        //   );
+        // }}
         onSeek={() => {
           setPlayText(
             <div className="loading">
@@ -389,7 +389,7 @@ function App() {
           document.querySelector("canvas").style.display = "none";
         }}
         onBuffer={() => {
-          setPlay(false);
+          // setPlay(false);
           setPlayText(
             <div className="loading">
               <AiOutlineLoading />
