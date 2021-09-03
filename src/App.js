@@ -358,15 +358,6 @@ function App() {
         muted={false}
         url={url}
         playing={play}
-        config={{
-          youtube: {
-            onUnstarted: function () {
-              setPlay(true);
-              setPlayText(<BsFillPauseFill />);
-              document.querySelector("canvas").style.display = "block";
-            },
-          },
-        }}
         onPlay={() => {
           setPlay(true);
           setPlayText(<BsFillPauseFill />);
