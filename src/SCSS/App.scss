@@ -63,7 +63,6 @@ $greyshadow: rgba(170, 170, 170, 0.2);
   .content {
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
     justify-content: space-between;
     padding-bottom: 30px;
     width: 95%;
@@ -167,18 +166,21 @@ $greyshadow: rgba(170, 170, 170, 0.2);
     right: 0;
     top: 20px;
     bottom: 0;
-    transform: translateY(28%) scale(0.4);
+    transform: translateY(28%);
     // transform: translateY(84%) scale(0.4);
   }
 
   @media (max-width: 550px) {
     #waves {
-      transform: translateY(23%) scale(0.3);
+      transform: translateY(53vh) translateX(30vw);
     }
-    .content .songName {
-      width: 100%;
-      order: 2;
-      padding-top: 20px;
+    .content {
+      flex-wrap: wrap;
+      .songName {
+        width: 100%;
+        order: 2;
+        padding-top: 20px;
+      }
     }
     .playButton.move {
       animation: moveDownMobile 0.5s linear forwards;
@@ -188,18 +190,22 @@ $greyshadow: rgba(170, 170, 170, 0.2);
     }
     .volumeSettings {
       margin-right: 0 !important;
-      padding-left: 20px;
+      // padding-left: 20px;
       .volumeIcon {
         font-size: 2rem;
+        padding-left: 20px;
       }
-      width: 50%;
+      width: 50% !important;
     }
     .countrySettings {
       display: flex;
       justify-content: flex-end;
-      padding-right: 20px;
+      // padding-right: 20px;
       width: 50%;
       margin-left: 0 !important;
+      svg {
+        padding-right: 20px;
+      }
     }
   }
 

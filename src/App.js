@@ -53,7 +53,7 @@ function App() {
     console.log(data);
     let photoUrl, photoWidth, photoHeight;
     if (data && index < data.items?.length - 1) {
-      setUrl(`https://www.youtube.com/watch?v=${data.items[index].id}`);
+      setUrl(`https://www.youtube.com/embed/${data.items[index].id}`);
       setSongName(data.items[index].snippet.localized.title);
       if (window.innerWidth > 786) {
         photoUrl = data.items[index].snippet.thumbnails.high.url;
@@ -85,6 +85,7 @@ function App() {
   const firstUpdate = useRef(false);
 
   function initWaves() {
+    let i = 0;
     const canvas = {
       playing: true,
       toggle() {
@@ -92,19 +93,29 @@ function App() {
       },
       init() {
         this.ele = document.querySelector("#waves");
-        this.resize();
-        window.addEventListener("resize", () => this.resize(), false);
+
+        if (i === 0) {
+          this.resize();
+          i++;
+        }
+        // window.addEventListener("resize", () => this.resize(), false);
         this.ctx = this.ele.getContext("2d");
         return this.ctx;
       },
-      onResize(callback) {
-        this.resizeCallback = callback;
-      },
+      // onResize(callback) {
+      //   this.resizeCallback = callback;
+      // },
       resize() {
         this.width = this.ele.width = window.innerWidth * 2;
         this.height = this.ele.height = window.innerHeight * 2;
-        this.ele.style.width = this.ele.width * 0.5 + "px";
-        this.ele.style.height = this.ele.height * 0.5 + "px";
+        if (window.innerWidth < 550) {
+          this.ele.style.width = this.ele.width * 0.2 + "px";
+          this.ele.style.height = this.ele.height * 0.2 + "px";
+        } else {
+          this.ele.style.width = this.ele.width * 0.5 + "px";
+          this.ele.style.height = this.ele.height * 0.5 + "px";
+        }
+
         this.ctx = this.ele.getContext("2d");
         this.ctx.scale(2, 2);
         this.resizeCallback && this.resizeCallback();
@@ -183,9 +194,9 @@ function App() {
       });
     });
 
-    canvas.onResize(() => {
-      init();
-    });
+    // canvas.onResize(() => {
+    //   init();
+    // });
   }
 
   useEffect(() => {
@@ -289,12 +300,13 @@ function App() {
             <GiSettingsKnobs />
           </span>
         </div>
-
-        <button className="playButton" onClick={handlePlay}>
-          {playText}
-        </button>
-        <canvas id="waves"></canvas>
       </div>
+
+      <button className="playButton" onClick={handlePlay}>
+        {playText}
+      </button>
+
+      <canvas id="waves"></canvas>
 
       <div className="location-settings">
         <div className="top">
@@ -338,11 +350,23 @@ function App() {
       </div>
 
       <ReactPlayer
+        controls={true}
         style={{ display: "none" }}
+        // style={{ zIndex: 5 }}
+        playsinline={true}
         volume={volumeValue / 100}
         muted={false}
         url={url}
         playing={play}
+        config={{
+          youtube: {
+            onUnstarted: function () {
+              setPlay(true);
+              setPlayText(<BsFillPauseFill />);
+              document.querySelector("canvas").style.display = "block";
+            },
+          },
+        }}
         onPlay={() => {
           setPlay(true);
           setPlayText(<BsFillPauseFill />);
@@ -383,7 +407,6 @@ function App() {
           document.querySelector("canvas").style.display = "none";
         }}
         onEnded={() => setJustGoToNext((prev) => !prev)}
-        // controls={true}
       />
     </div>
   );
