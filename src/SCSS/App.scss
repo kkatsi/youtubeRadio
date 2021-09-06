@@ -108,6 +108,7 @@ $greyshadow: rgba(170, 170, 170, 0.2);
       left: 0;
       right: 0;
       margin: auto;
+      width: 0;
       // background-size: contain;
       background-repeat: no-repeat;
       background-position: center;
@@ -166,7 +167,7 @@ $greyshadow: rgba(170, 170, 170, 0.2);
     right: 0;
     top: 20px;
     bottom: 0;
-    transform: translateY(28%) scale(0.4);
+    transform: translateY(28.5%) scale(0.52);
     // transform: translateY(84%) scale(0.4);
   }
 

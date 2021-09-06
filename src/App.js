@@ -98,13 +98,13 @@ function App() {
           this.resize();
           i++;
         }
-        // window.addEventListener("resize", () => this.resize(), false);
+        window.addEventListener("resize", () => this.resize(), false);
         this.ctx = this.ele.getContext("2d");
         return this.ctx;
       },
-      // onResize(callback) {
-      //   this.resizeCallback = callback;
-      // },
+      onResize(callback) {
+        this.resizeCallback = callback;
+      },
       resize() {
         this.width = this.ele.width = window.innerWidth * 2;
         this.height = this.ele.height = window.innerHeight * 2;
@@ -194,14 +194,24 @@ function App() {
       });
     });
 
-    // canvas.onResize(() => {
-    //   init();
-    // });
+    canvas.onResize(() => {
+      init();
+    });
   }
 
   useEffect(() => {
     initWaves();
     document.querySelector("canvas").style.display = "none";
+    if (window.innerWidth < 550)
+      window.addEventListener("orientationchange", function () {
+        if (window.innerHeight > window.innerWidth) {
+          document.querySelector("body").style.transform = "rotate(90deg)";
+          document.querySelector("body").style.width = "100%";
+          document.querySelector("body").style.height = "100%";
+        }
+      });
+    // window.screen.orientation.lock(); // webkit only
+    // window.screen.lockOrientation("portrait");
   }, []);
 
   useEffect(() => {
@@ -343,7 +353,7 @@ function App() {
                 setDisabled(true);
               }}
             >
-              Save
+              Play
             </button>
           </div>
         </div>
