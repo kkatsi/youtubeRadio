@@ -14,6 +14,8 @@ Used [React](https://reactjs.org/) to develop the whole thing.
 1) [Youtube Data API](https://developers.google.com/youtube/) 
 2) [React Icons](https://react-icons.github.io/react-icons/) 
 3) [SASS](https://sass-lang.com/)
+4) [Random Color](https://github.com/davidmerfield/randomColor)
+5) [Simplex Noise](https://github.com/jwagner/simplex-noise.js)
  
 
 ## Achived Functionality
